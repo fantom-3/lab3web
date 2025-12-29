@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                                  http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_3.xsd"
+              version="2.3">
+
+    <managed-bean>
+        <managed-bean-name>dbConfig</managed-bean-name>
+        <managed-bean-class>config.DbConfig</managed-bean-class>
+        <managed-bean-scope>application</managed-bean-scope>
+
+        <managed-property>
+            <property-name>url</property-name>
+            <value>jdbc:postgresql://localhost:5433/studs</value>
+        </managed-property>
+
+        <managed-property>
+            <property-name>user</property-name>
+            <value>s466150</value>
+        </managed-property>
+
+        <managed-property>
+            <property-name>password</property-name>
+            <value>Uxn6MODi81brmRFQ</value>
+        </managed-property>
+    </managed-bean>
+
+    <managed-bean>
+        <managed-bean-name>resultsBean</managed-bean-name>
+        <managed-bean-class>beans.ResultsBean</managed-bean-class>
+        <managed-bean-scope>session</managed-bean-scope>
+
+        <managed-property>
+            <property-name>dbConfig</property-name>
+            <value>#{dbConfig}</value>
+        </managed-property>
+    </managed-bean>
+
+    <managed-bean>
+        <managed-bean-name>inputBean</managed-bean-name>
+        <managed-bean-class>beans.InputBean</managed-bean-class>
+        <managed-bean-scope>view</managed-bean-scope>
+
+        <managed-property>
+            <property-name>resultsBean</property-name>
+            <value>#{resultsBean}</value>
+        </managed-property>
+    </managed-bean>
+
+</faces-config>

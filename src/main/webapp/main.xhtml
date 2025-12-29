@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+  <meta charset="UTF-8"/>
+  <title>lab3 — основная страница</title>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: #0f172a;
+      --border: #233042;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --danger: #f87171;
+      --success: #34d399;
+
+      --canvas-bg: #f1f5f9;
+      --canvas-border: #cbd5e1;
+    }
+
+    body {
+      font-family: -apple-system;
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(900px 600px at 20% 0%, rgba(96,165,250,0.16), transparent 60%),
+      radial-gradient(900px 600px at 80% 10%, rgba(147,197,253,0.10), transparent 55%),
+      var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 12px 0;
+      letter-spacing: 0.2px;
+    }
+
+    .row { margin-bottom: 14px; }
+    .label { font-weight: 700; margin-bottom: 6px; }
+    .small { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+    input[type="text"], input[type="number"] {
+      background: rgba(11, 18, 32, 0.55);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 12px;
+      outline: none;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      border-color: rgba(96,165,250,0.45);
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+    }
+
+    .btn {
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(35,48,66,0.35);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover {
+      background: rgba(96,165,250,0.12);
+      border-color: rgba(96,165,250,0.35);
+      transform: translateY(-1px);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .btn-secondary {
+      border-color: var(--border);
+      color: var(--text);
+      background: rgba(35,48,66,0.25);
+    }
+
+    .btn-danger {
+      border-color: rgba(248,113,113,0.55);
+      color: #ffd6d6;
+      background: rgba(248,113,113,0.08);
+    }
+    .btn-danger:hover {
+      background: rgba(248,113,113,0.14);
+      border-color: rgba(248,113,113,0.65);
+    }
+
+    .btn + .btn { margin-left: 8px; }
+
+    .r-buttons .btn {
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    .r-current { margin-top: 8px; font-weight: 700; }
+
+    canvas {
+      border: 1px solid var(--canvas-border);
+      background: var(--canvas-bg);
+      border-radius: 16px;
+      width: 600px;
+      height: 600px;
+      max-width: 100%;
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      font-weight: 800;
+      background: rgba(35,48,66,0.35);
+    }
+    tr:hover td {
+      background: rgba(96,165,250,0.06);
+    }
+
+    .hit { font-weight: 900; }
+    .hit-yes { color: var(--success); }
+    .hit-no  { color: var(--danger); }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .link:hover { text-decoration: underline; }
+
+    .messages { margin: 10px 0 0 0; }
+    .messages li { color: #ffd6d6; }
+  </style>
+
+  <script type="text/javascript">
+    function lab3GetNumberFromSpan(id) {
+      var el = document.getElementById(id);
+      if (!el) return 0;
+      var t = (el.textContent || "").trim();
+      if (!t) return 0;
+      var v = Number(t);
+      return isFinite(v) ? v : 0;
+    }
+
+    function lab3GetGraphData() {
+      var el = document.getElementById("graphData");
+      if (!el) return [];
+      var json = (el.textContent || "").trim();
+      if (!json) return [];
+      try {
+        return JSON.parse(json);
+      } catch (e) {
+        console.error("Bad graphData JSON", e, json);
+        return [];
+      }
+    }
+
+    function lab3Draw() {
+      var canvas = document.getElementById("plot");
+      if (!canvas) return;
+
+      var ctx = canvas.getContext("2d");
+      var w = canvas.width, h = canvas.height;
+      var cx = w / 2, cy = h / 2;
+
+      var r = lab3GetNumberFromSpan("currentR");
+      var results = lab3GetGraphData();
+
+      if (r <= 0) {
+        ctx.clearRect(0, 0, w, h);
+        lab3DrawAxes(ctx, cx, cy, 50, 0);
+        ctx.font = "14px Arial";
+        ctx.fillText("Выбери R, чтобы увидеть область", 10, 20);
+        lab3DrawPoints(ctx, cx, cy, 50, results, 0);
+        return;
+      }
+
+      var padding = 50;
+      var VIEW = 5;
+      var scale = (Math.min(w, h) / 2 - padding) / VIEW;
+
+      ctx.clearRect(0, 0, w, h);
+
+      lab3DrawArea(ctx, cx, cy, scale, r);
+
+      lab3DrawAxes(ctx, cx, cy, scale, r);
+
+      lab3DrawPoints(ctx, cx, cy, scale, results, r);
+    }
+
+    function lab3DrawAxes(ctx, cx, cy, scale, r) {
+      ctx.save();
+
+      ctx.beginPath();
+      ctx.moveTo(0, cy);
+      ctx.lineTo(cx * 2, cy);
+      ctx.moveTo(cx, 0);
+      ctx.lineTo(cx, cy * 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx * 2 - 10, cy - 5);
+      ctx.lineTo(cx * 2, cy);
+      ctx.lineTo(cx * 2 - 10, cy + 5);
+
+      ctx.moveTo(cx - 5, 10);
+      ctx.lineTo(cx, 0);
+      ctx.lineTo(cx + 5, 10);
+      ctx.stroke();
+
+      ctx.font = "14px Arial";
+      ctx.fillText("X", cx * 2 - 18, cy - 10);
+      ctx.fillText("Y", cx + 10, 16);
+
+      if (r > 0) {
+        var halfR = r / 2;
+
+        lab3Tick(ctx, cx, cy, scale,  r, 0, "R");
+        lab3Tick(ctx, cx, cy, scale, -r, 0, "-R");
+        lab3Tick(ctx, cx, cy, scale,  halfR, 0, "R/2");
+        lab3Tick(ctx, cx, cy, scale, -halfR, 0, "-R/2");
+
+        lab3Tick(ctx, cx, cy, scale,  0,  r, "R");
+        lab3Tick(ctx, cx, cy, scale,  0, -r, "-R");
+        lab3Tick(ctx, cx, cy, scale,  0,  halfR, "R/2");
+        lab3Tick(ctx, cx, cy, scale,  0, -halfR, "-R/2");
+      }
+
+      ctx.restore();
+    }
+
+    function lab3Tick(ctx, cx, cy, scale, x, y, label) {
+      var px = cx + x * scale;
+      var py = cy - y * scale;
+
+      ctx.save();
+      ctx.beginPath();
+
+      if (y === 0) {
+        ctx.moveTo(px, py - 5);
+        ctx.lineTo(px, py + 5);
+        ctx.stroke();
+        ctx.fillText(label, px - 12, py + 18);
+      } else if (x === 0) {
+        ctx.moveTo(px - 5, py);
+        ctx.lineTo(px + 5, py);
+        ctx.stroke();
+        ctx.fillText(label, px + 8, py + 5);
+      }
+
+      ctx.restore();
+    }
+
+    function lab3DrawArea(ctx, cx, cy, scale, r) {
+      ctx.save();
+
+      ctx.fillStyle = "rgba(80, 160, 255, 0.25)";
+      ctx.strokeStyle = "rgba(80, 160, 255, 0.9)";
+
+      ctx.beginPath();
+      ctx.rect(cx + 0 * scale, cy - 0 * scale, r * scale, r * scale);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx, cy - (r / 2) * scale);
+      ctx.lineTo(cx + r * scale, cy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      var rad = (r / 2) * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+
+      ctx.arc(cx, cy, rad, Math.PI, 3 * Math.PI / 2, false);
+
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function lab3DrawPoints(ctx, cx, cy, scale, results, currentR) {
+      if (!results || results.length === 0) return;
+
+      var rNum = Number(currentR);
+      var filterByR = isFinite(rNum) && rNum > 0;
+      var eps = 1e-9;
+
+      if (!filterByR) return;
+
+      for (var i = 0; i < results.length; i++) {
+        var p = results[i];
+
+        var pr = Number(p.r);
+        if (!isFinite(pr) || Math.abs(pr - rNum) > eps) continue;
+
+        var x = Number(p.x);
+        var y = Number(p.y);
+        if (!isFinite(x) || !isFinite(y)) continue;
+
+        var px = cx + x * scale;
+        var py = cy - y * scale;
+
+        ctx.save();
+        ctx.fillStyle = p.hit ? "#0a0" : "#a00";
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function lab3InitCanvasClick() {
+      if (window._lab3CanvasDelegatedClick) return;
+      window._lab3CanvasDelegatedClick = true;
+
+      document.addEventListener("click", function (evt) {
+        var canvas = evt.target;
+        if (!canvas || canvas.id !== "plot") return;
+
+        var r = lab3GetNumberFromSpan("currentR");
+        if (r <= 0) {
+          alert("Сначала выбери R.");
+          return;
+        }
+
+        var rect = canvas.getBoundingClientRect();
+        var xCss = evt.clientX - rect.left;
+        var yCss = evt.clientY - rect.top;
+
+        var xPix = xCss * (canvas.width / rect.width);
+        var yPix = yCss * (canvas.height / rect.height);
+
+        var w = canvas.width, h = canvas.height;
+        var cx = w / 2, cy = h / 2;
+        var padding = 50;
+        var VIEW = 5;
+        var scale = (Math.min(w, h) / 2 - padding) / VIEW;
+
+        var x = (xPix - cx) / scale;
+        var y = (cy - yPix) / scale;
+
+        var xEl = document.getElementById("mainForm:clickX");
+        var yEl = document.getElementById("mainForm:clickY");
+        var btn = document.getElementById("mainForm:canvasSubmit");
+
+        if (!xEl || !yEl || !btn) {
+          alert("Внутренняя ошибка: не найдены элементы формы для клика.");
+          return;
+        }
+
+        xEl.value = x.toFixed(6);
+        yEl.value = y.toFixed(6);
+
+        if (window.jsf && jsf.ajax && jsf.ajax.request) {
+          jsf.ajax.request(btn, null, {
+            execute: "mainForm:clickX mainForm:clickY",
+            render: "resultsPanel graphPanel mainForm:messages"
+          });
+        } else {
+          btn.click();
+        }
+      }, true);
+    }
+
+    function lab3InitAjaxRedraw() {
+      if (window.jsf && jsf.ajax && jsf.ajax.addOnEvent) {
+        jsf.ajax.addOnEvent(function (data) {
+          if (data.status === "success") {
+            lab3Draw();
+          }
+        });
+      }
+    }
+
+    window.addEventListener("load", function () {
+      lab3InitCanvasClick();
+      lab3InitAjaxRedraw();
+      lab3Draw();
+    });
+    /*]]>*/
+  </script>
+</h:head>
+
+<h:body>
+  <f:metadata>
+    <f:event type="preRenderView" listener="#{inputBean.initView}"/>
+  </f:metadata>
+
+  <div class="container">
+
+    <div class="top-actions">
+      <h:link outcome="toIndex" styleClass="link" value="← На стартовую страницу"/>
+      <span class="small">Session: #{resultsBean.sessionId}</span>
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="title">Ввод параметров</div>
+
+        <h:form id="mainForm">
+          <h:panelGroup id="formPanel">
+
+            <div class="row">
+              <div class="label">X</div>
+              <h:selectOneRadio value="#{inputBean.x}" required="true" requiredMessage="Выберите X.">
+                <f:selectItems value="#{inputBean.XValues}"/>
+              </h:selectOneRadio>
+            </div>
+
+            <div class="row">
+              <div class="label">Y</div>
+              <h:inputText value="#{inputBean.y}" required="true" style="width: 120px;"
+                           requiredMessage="Введите Y."/>
+              <div class="small"> Диапазон [-5; 3].</div>
+            </div>
+
+            <div class="row">
+              <div class="label">R</div>
+              <div class="r-buttons">
+                <h:commandButton value="1" styleClass="btn btn-secondary" action="#{inputBean.chooseR(1)}">
+                  <f:ajax execute="@this"
+                          render=":graphPanel :mainForm:rPanel :mainForm:messages"/>
+                </h:commandButton>
+
+                <h:commandButton value="2" styleClass="btn btn-secondary" action="#{inputBean.chooseR(2)}">
+                  <f:ajax execute="@this"
+                          render=":graphPanel :mainForm:rPanel :mainForm:messages"/>
+                </h:commandButton>
+
+                <h:commandButton value="3" styleClass="btn btn-secondary" action="#{inputBean.chooseR(3)}">
+                  <f:ajax execute="@this"
+                          render=":graphPanel :mainForm:rPanel :mainForm:messages"/>
+                </h:commandButton>
+
+                <h:commandButton value="4" styleClass="btn btn-secondary" action="#{inputBean.chooseR(4)}">
+                  <f:ajax execute="@this"
+                          render=":graphPanel :mainForm:rPanel :mainForm:messages"/>
+                </h:commandButton>
+
+                <h:commandButton value="5" styleClass="btn btn-secondary" action="#{inputBean.chooseR(5)}">
+                  <f:ajax execute="@this"
+                          render=":graphPanel :mainForm:rPanel :mainForm:messages"/>
+                </h:commandButton>
+              </div>
+
+              <h:panelGroup id="rPanel">
+                <div class="r-current">
+                  Текущий R:
+                  <h:outputText value="#{empty inputBean.r ? 'не выбран' : inputBean.r}"/>
+                </div>
+              </h:panelGroup>
+            </div>
+
+            <div class="row">
+              <h:commandButton value="Проверить" styleClass="btn" action="#{inputBean.check}">
+                <f:ajax execute="@form"
+                        render=":resultsPanel :graphPanel :mainForm:messages :mainForm:formPanel"/>
+              </h:commandButton>
+
+              <h:commandButton value="Сброс формы" styleClass="btn btn-secondary" action="#{inputBean.reset}">
+                <f:ajax execute="@this"
+                        render=":graphPanel :mainForm:formPanel :mainForm:messages"/>
+              </h:commandButton>
+            </div>
+
+            <div class="row">
+              <h:commandButton value="Очистить историю" styleClass="btn btn-danger" action="#{resultsBean.clear}">
+                <f:ajax execute="@this"
+                        render=":resultsPanel :graphPanel :mainForm:messages"/>
+              </h:commandButton>
+              <div class="small">Очистка удаляет результаты текущей сессии и в таблице, и в БД.</div>
+            </div>
+
+            <h:inputHidden id="clickX" value="#{inputBean.clickX}"/>
+            <h:inputHidden id="clickY" value="#{inputBean.clickY}"/>
+
+            <h:commandButton id="canvasSubmit" value="canvasSubmit" style="display:none"
+                             action="#{inputBean.checkFromCanvas}">
+              <f:ajax execute="clickX clickY"
+                      render=":resultsPanel :graphPanel :mainForm:messages"/>
+            </h:commandButton>
+
+            <div class="messages">
+              <h:messages id="messages" globalOnly="false" layout="list"/>
+            </div>
+
+          </h:panelGroup>
+        </h:form>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom: 18px;">
+          <div class="title">График</div>
+
+          <h:panelGroup id="graphPanel">
+            <span id="currentR" style="display:none;">#{empty inputBean.r ? 0 : inputBean.r}</span>
+
+            <span id="graphData" style="display:none;">[
+                        <ui:repeat value="#{resultsBean.results}" var="res" varStatus="st">
+                            {"x":#{res.x},"y":#{res.y},"r":#{res.r},"hit":#{res.hit}}#{st.last ? '' : ','}
+                        </ui:repeat>
+                    ]</span>
+
+            <canvas id="plot" width="600" height="600"></canvas>
+          </h:panelGroup>
+        </div>
+
+        <div class="card">
+          <div class="title">История результатов</div>
+
+          <h:panelGroup id="resultsPanel">
+            <h:dataTable value="#{resultsBean.results}" var="res">
+              <h:column>
+                <f:facet name="header">X</f:facet>
+                <h:outputText value="#{res.x}"/>
+              </h:column>
+
+              <h:column>
+                <f:facet name="header">Y</f:facet>
+                <h:outputText value="#{res.y}"/>
+              </h:column>
+
+              <h:column>
+                <f:facet name="header">R</f:facet>
+                <h:outputText value="#{res.r}"/>
+              </h:column>
+
+              <h:column>
+                <f:facet name="header">Попадание</f:facet>
+                <h:panelGroup>
+                  <h:outputText value="Да" styleClass="hit hit-yes" rendered="#{res.hit}"/>
+                  <h:outputText value="Нет" styleClass="hit hit-no" rendered="#{not res.hit}"/>
+                </h:panelGroup>
+              </h:column>
+
+              <h:column>
+                <f:facet name="header">Время проверки</f:facet>
+                <h:outputText value="#{res.checkTimeFormatted}"/>
+              </h:column>
+
+              <h:column>
+                <f:facet name="header">Время выполнения (нс)</f:facet>
+                <h:outputText value="#{res.execTimeNs}"/>
+              </h:column>
+            </h:dataTable>
+          </h:panelGroup>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</h:body>
+</html>

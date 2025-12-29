@@ -1,0 +1,2 @@
+beans-config.xml: request -> session scope
+main.xhtml: render
